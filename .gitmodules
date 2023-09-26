@@ -1,0 +1,3 @@
+[submodule "ConceptioMsgs"]
+	path = ConceptioMsgs
+	url = https://github.com/CentroEspacialITA/ConceptioMsgs.git
