@@ -35,7 +35,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ConceptioArena/conceptio_bridges
       -
         name: Build and push
         uses: docker/build-push-action@v4
