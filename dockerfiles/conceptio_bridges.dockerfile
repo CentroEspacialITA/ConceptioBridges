@@ -6,7 +6,7 @@ ARG WEBSOCKET_PORT=9091
 ARG TCP_PORT=9090
 ENV WEBSOCKET_PORT_ENV ${WEBSOCKET_PORT}
 ENV TCP_PORT_ENV ${TCP_PORT}
-  
+
 ARG WORKSPACE=/opt/conceptio
 
 RUN apt update -y && apt dist-upgrade -y && apt install -y python3-pip
