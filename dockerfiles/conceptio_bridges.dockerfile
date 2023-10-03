@@ -12,15 +12,15 @@ ARG WORKSPACE=/opt/conceptio
 RUN apt update -y && apt dist-upgrade -y && apt install -y python3-pip
 
 WORKDIR ${WORKSPACE}
-COPY ["ConceptioMsgs/conceptio_msgs", "conceptio_msgs/"]
-COPY ["RosbridgeSuite/rosbridge_suite", "rosbridge_suite/"]
+COPY ["conceptio_interfaces", "conceptio_interfaces/"]
+COPY ["rosbridge_suite", "rosbridge_suite/"]
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN pip3 install --upgrade setuptools==58.2.0
 
 RUN rosdep install --from-paths . --ignore-src -r -y
 
-WORKDIR ${WORKSPACE}/conceptio_msgs
+WORKDIR ${WORKSPACE}/conceptio_interfaces
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
 	colcon build
 
