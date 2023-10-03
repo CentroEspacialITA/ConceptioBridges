@@ -1,6 +1,0 @@
-[submodule "ConceptioMsgs"]
-	path = ConceptioMsgs
-	url = https://github.com/CentroEspacialITA/ConceptioMsgs.git
-[submodule "RosbridgeSuite/rosbridge_suite"]
-	path = RosbridgeSuite/rosbridge_suite
-	url = https://github.com/mvccogo/rosbridge_suite.git
