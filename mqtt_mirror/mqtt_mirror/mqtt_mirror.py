@@ -2,9 +2,13 @@ import rclpy
 
 from rclpy.node import Node
 from std_msgs.msg import String
+from conceptio_interfaces.msg import ArenaHeartbeat
+from conceptio_interfaces.msg import ArenaKinematics
+
 from rclpy import qos
 from rclpy.qos import QoSProfile
 import paho.mqtt.client as mqtt
+import json 
 
 class MqttMirror(Node):
 
@@ -21,24 +25,39 @@ class MqttMirror(Node):
         self.mqtt_client.loop_forever()
 
     def on_message(self, client, userdata, msg : mqtt.MQTTMessage):
-        send = String()
         topic = msg.topic
-        last_subtopic = topic.split('/')[-2]
+        last_subtopic = topic.split('/')[-1]
 
-        message = msg.payload.decode("utf-8")
-        send.data = message
+        message = json.loads(msg.payload.decode("utf-8"))
+        send = None
 
-        if last_subtopic == "position":
-            pass
+        if last_subtopic == "heartbeat":
+            #print("Received message in heartbeat")
+            send = ArenaHeartbeat()
+            send.entity_type = message['entity_type']
+            send.entity_uuid = message['entity_uuid']
+            send.entity_name = message['entity_name']
+            send.heartbeat_rate = message['heartbeat_rate']
+            send.stamp = message['stamp']
+            send.type = message['type']
+        elif last_subtopic == "kinematics":
+            #print("Received message in kinematics")
+            send = ArenaKinematics()
+            send.geo_point = message['geopoint']
+            send.yaw = message['yaw']
+            send.pitch = message['pitch']
+            send.roll = message['roll']
         else:
-            if topic not in self.publishers_:
+            #print(f"Incorrect lastsubtopic? {last_subtopic}")
+            return
+        
+        if topic not in self.publishers_:
+                # https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html#
                 _qos = QoSProfile(durability=qos.QoSDurabilityPolicy.VOLATILE,
                            reliability=qos.QoSReliabilityPolicy.BEST_EFFORT, history=qos.QoSHistoryPolicy.KEEP_LAST, depth=1)
 
-                self.publishers_[topic] = self.create_publisher(String, topic, 0)
-            self.publishers_[topic].publish(send)
-            
-
+                self.publishers_[topic] = self.create_publisher(type(send), topic, 0)
+        self.publishers_[topic].publish(send)
         
 def main(args=None):
     rclpy.init(args=args)
