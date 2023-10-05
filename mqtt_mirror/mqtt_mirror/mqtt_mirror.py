@@ -26,13 +26,13 @@ class MqttMirror(Node):
 
     def on_message(self, client, userdata, msg : mqtt.MQTTMessage):
         topic = msg.topic
-        last_subtopic = topic.split('/')[-2]
+        last_subtopic = topic.split('/')[-1]
 
         message = json.loads(msg.payload.decode("utf-8"))
         send = None
 
         if last_subtopic == "heartbeat":
-            print("Received message in lastsubtopic heartbeat")
+            #print("Received message in heartbeat")
             send = ArenaHeartbeat()
             send.entity_type = message['entity_type']
             send.entity_uuid = message['entity_uuid']
@@ -41,14 +41,14 @@ class MqttMirror(Node):
             send.stamp = message['stamp']
             send.type = message['type']
         elif last_subtopic == "kinematics":
-            print("Received message in lastsubtopic kinematics")
+            #print("Received message in kinematics")
             send = ArenaKinematics()
             send.geo_point = message['geopoint']
             send.yaw = message['yaw']
             send.pitch = message['pitch']
             send.roll = message['roll']
         else:
-            print(f"Incorrect lastsubtopic? {last_subtopic}")
+            #print(f"Incorrect lastsubtopic? {last_subtopic}")
             return
         
         if topic not in self.publishers_:

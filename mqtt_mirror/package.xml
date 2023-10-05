@@ -7,6 +7,8 @@
   <maintainer email="mvccogo@todo.todo">mvccogo</maintainer>
   <license>TODO: License declaration</license>
 
+  <exec_depend>conceptio_interfaces</exec_depend>
+  
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
