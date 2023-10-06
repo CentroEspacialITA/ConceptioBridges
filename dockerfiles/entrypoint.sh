@@ -2,7 +2,7 @@
 
 . /opt/ros/${ROS_DISTRO}/setup.sh
 . /opt/conceptio/conceptio_bridges/install/setup.sh
-ufw disable
-ros2 launch rosbridge_server rosbridge_websocket_launch.xml port:=$1 &
-ros2 launch rosbridge_server rosbridge_tcp_launch.xml port:=$2 &
-ros2 launch conceptio_bridges mqtt_mirror.py
+sudo ufw disable
+ros2 launch conceptio_bridges conceptio_bridges_launch.py \
+    websocket_port:=$1 tcp_port:=$2 \
+    mqtt_host:=$3 mqtt_port:=$4
