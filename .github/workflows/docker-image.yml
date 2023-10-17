@@ -1,4 +1,4 @@
-name: Conceptio Bridge Docker Image CI
+name: Conceptio Bridge Image   
 
 on:
   push:
