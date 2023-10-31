@@ -16,7 +16,7 @@ class MqttMirror(Node):
         super().__init__('mqtt_mirror')
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.on_message = self.on_message
-        self.declare_parameter('mqtt_host', 'localhost')
+        self.declare_parameter('mqtt_host', 'emqx')
         self.declare_parameter('mqtt_port',  1883)
         self.mqtt_client.connect(self.get_parameter('mqtt_host').get_parameter_value().string_value, 
            self.get_parameter('mqtt_port').get_parameter_value().integer_value)
