@@ -26,7 +26,7 @@ def generate_launch_description():
 
     mqtt_host_launch_arg = DeclareLaunchArgument(
         'mqtt_host',
-        default_value='localhost',
+        default_value='emqx',
         description='MQTT host for mqtt_mirror')
 
     mqtt_port_launch_arg = DeclareLaunchArgument(
