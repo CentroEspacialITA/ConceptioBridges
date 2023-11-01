@@ -18,7 +18,7 @@ class MqttMirror(Node):
         self.mqtt_client.on_message = self.on_message
         self.declare_parameter('mqtt_host', 'emqx')
         self.declare_parameter('mqtt_port',  1883)
-        self.get_logger().log("Connecting to MQTT broker with host: " + self.get_parameter('mqtt_host').get_parameter_value().string_value + " and port: " + str(self.get_parameter('mqtt_port').get_parameter_value().integer_value)
+        self.get_logger().log("Connecting to MQTT broker with host: " + self.get_parameter('mqtt_host').get_parameter_value().string_value + " and port: " + str(self.get_parameter('mqtt_port').get_parameter_value().integer_value))
         self.mqtt_client.connect(self.get_parameter('mqtt_host').get_parameter_value().string_value, 
            self.get_parameter('mqtt_port').get_parameter_value().integer_value)
         self.mqtt_client.subscribe("conceptio/unit/#", qos = 0)
@@ -27,7 +27,7 @@ class MqttMirror(Node):
 
     def on_message(self, client, userdata, msg : mqtt.MQTTMessage):
         topic = msg.topic
-        topic_no_whitespace = topic.replace(" ", "_");
+        topic_no_whitespace_lowercase = topic.replace(" ", "-").lower()
         first_subtopic = topic.split('/')[1]
         last_subtopic = topic.split('/')[-1]
         if last_subtopic != "kinematics":
@@ -64,7 +64,7 @@ class MqttMirror(Node):
                 _qos = QoSProfile(durability=qos.QoSDurabilityPolicy.VOLATILE,
                            reliability=qos.QoSReliabilityPolicy.BEST_EFFORT, history=qos.QoSHistoryPolicy.KEEP_LAST, depth=1)
 
-                self.publishers_[topic] = self.create_publisher(type(send), topic_no_whitespace, 0)
+                self.publishers_[topic] = self.create_publisher(type(send), topic_no_whitespace_lowercase, 0)
                 self.get_logger().info(f"[MQTT-Mirror] Created publisher for {topic}") 
         self.publishers_[topic].publish(send)
 
