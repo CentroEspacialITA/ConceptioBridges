@@ -18,7 +18,7 @@ class MqttMirror(Node):
         self.mqtt_client.on_message = self.on_message
         self.declare_parameter('mqtt_host', 'emqx')
         self.declare_parameter('mqtt_port',  1883)
-        self.get_logger().log("Connecting to MQTT broker with host: " + self.get_parameter('mqtt_host').get_parameter_value().string_value + " and port: " + str(self.get_parameter('mqtt_port').get_parameter_value().integer_value))
+        self.get_logger().log("Connecting to MQTT broker with host: " + self.get_parameter('mqtt_host').get_parameter_value().string_value + " and port: " + str(self.get_parameter('mqtt_port').get_parameter_value().integer_value), 1)
         self.mqtt_client.connect(self.get_parameter('mqtt_host').get_parameter_value().string_value, 
            self.get_parameter('mqtt_port').get_parameter_value().integer_value)
         self.mqtt_client.subscribe("conceptio/unit/#", qos = 0)
