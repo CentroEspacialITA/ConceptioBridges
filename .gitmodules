@@ -1,6 +1,3 @@
 [submodule "conceptio_interfaces"]
 	path = conceptio_interfaces
 	url = https://github.com/ConceptioLab/conceptio_interfaces.git
-[submodule "rosbridge_suite"]
-	path = rosbridge_suite
-	url = https://github.com/mvccogo/rosbridge_suite.git
