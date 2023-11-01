@@ -29,7 +29,7 @@ class MqttMirror(Node):
 
     def on_message(self, client, userdata, msg : mqtt.MQTTMessage):
         topic = msg.topic
-        topic_no_whitespace_lowercase = topic.replace(" ", "-").lower()
+        topic_no_whitespace_lowercase = topic.replace("-", "_").lower()
         first_subtopic = topic.split('/')[1]
         last_subtopic = topic.split('/')[-1]
         if last_subtopic != "kinematics":
@@ -61,14 +61,14 @@ class MqttMirror(Node):
             self.get_logger().info(f"[MQTT-Mirror] Received message in unknown topic {topic}")
             return
         
-        if topic not in self.publishers_:
+        if topic_no_whitespace_lowercase not in self.publishers_:
                 # https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html#
                 _qos = QoSProfile(durability=qos.QoSDurabilityPolicy.VOLATILE,
                            reliability=qos.QoSReliabilityPolicy.BEST_EFFORT, history=qos.QoSHistoryPolicy.KEEP_LAST, depth=1)
 
-                self.publishers_[topic] = self.create_publisher(type(send), topic_no_whitespace_lowercase, 0)
-                self.get_logger().info(f"[MQTT-Mirror] Created publisher for {topic}") 
-        self.publishers_[topic].publish(send)
+                self.publishers_[topic_no_whitespace_lowercase] = self.create_publisher(type(send), topic_no_whitespace_lowercase, 0)
+                self.get_logger().info(f"[MQTT-Mirror] Created publisher for {topic_no_whitespace_lowercase}") 
+        self.publishers_[topic_no_whitespace_lowercase].publish(send)
 
     def on_connect(self, client, userdata, flags, rc):
         self.get_logger().info(f"[MQTT-Mirror] Connected to MQTT broker with result code {rc}")
