@@ -1,13 +1,9 @@
 ARG ROS_DISTRO=humble
 FROM ros:${ROS_DISTRO} as builder
 	
-ARG WEBSOCKET_PORT=9091
-ARG TCP_PORT=9090
-ARG MQTT_HOST='localhost'
+ARG MQTT_HOST='emqx'
 ARG MQTT_PORT=1883
 
-ENV WEBSOCKET_PORT_ENV ${WEBSOCKET_PORT}
-ENV TCP_PORT_ENV ${TCP_PORT}
 ENV MQTT_HOST_ENV ${MQTT_HOST}
 ENV MQTT_PORT_ENV ${MQTT_PORT}
 
@@ -34,7 +30,6 @@ HEALTHCHECK --interval=10s --timeout=4s \
 
 RUN ["chmod", "+x", "dockerfiles/entrypoint.sh"]
 RUN ["chmod", "+x", "dockerfiles/healthcheck.sh"]
-ENTRYPOINT ./dockerfiles/entrypoint.sh ${WEBSOCKET_PORT_ENV} ${TCP_PORT_ENV} \
-	 ${MQTT_HOST_ENV} ${MQTT_PORT_ENV}
+ENTRYPOINT ./dockerfiles/entrypoint.sh ${MQTT_HOST_ENV} ${MQTT_PORT_ENV}
 
 
