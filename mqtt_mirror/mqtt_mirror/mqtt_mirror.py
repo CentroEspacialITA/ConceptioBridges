@@ -31,7 +31,7 @@ class MqttMirror(Node):
     def on_message(self, client, userdata, msg : mqtt.MQTTMessage):
         topic = msg.topic
         topic_no_whitespace_lowercase = topic.replace("-", "_").lower()
-        topic_no_starting_with_number = None
+        topic_no_starting_with_number = ""
         topics_split = topic_no_whitespace_lowercase.split('/')
         for i, subtopic in enumerate(topics_split):
             if subtopic[0].isdigit():
