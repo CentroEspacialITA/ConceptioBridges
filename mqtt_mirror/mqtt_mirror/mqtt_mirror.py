@@ -31,6 +31,15 @@ class MqttMirror(Node):
     def on_message(self, client, userdata, msg : mqtt.MQTTMessage):
         topic = msg.topic
         topic_no_whitespace_lowercase = topic.replace("-", "_").lower()
+        topic_no_starting_with_number = None
+        if not topic_no_whitespace_lowercase[0].isdigit():
+            topic_no_starting_with_number = topic_no_whitespace_lowercase
+        else:
+            for i, char in enumerate(topic_no_whitespace_lowercase):
+                if not char.isdigit():
+                    topic_no_starting_with_number = topic_no_whitespace_lowercase[i:]
+                    break 
+
         first_subtopic = topic.split('/')[1]
         last_subtopic = topic.split('/')[-1]
         if last_subtopic != "kinematics":
@@ -62,19 +71,19 @@ class MqttMirror(Node):
             self.get_logger().info(f"[MQTT-Mirror] Received message in unknown topic {topic}")
             return
         
-        if topic_no_whitespace_lowercase not in self.publishers_:
+        if topic_no_starting_with_number not in self.publishers_:
                 # https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html#
                 _qos = QoSProfile(durability=qos.QoSDurabilityPolicy.VOLATILE,
                            reliability=qos.QoSReliabilityPolicy.BEST_EFFORT, history=qos.QoSHistoryPolicy.KEEP_LAST, depth=1)
 
                 try:
-                    self.publishers_[topic_no_whitespace_lowercase] = self.create_publisher(type(send), topic_no_whitespace_lowercase, 0)
+                    self.publishers_[topic_no_starting_with_number] = self.create_publisher(type(send), topic_no_starting_with_number, 0)
                 except InvalidTopicNameException as err_name:
                     self.get_logger().info(f"[MQTT-Mirror] {err_name}")
                     return
                 
-                self.get_logger().info(f"[MQTT-Mirror] Created publisher for {topic_no_whitespace_lowercase}") 
-        self.publishers_[topic_no_whitespace_lowercase].publish(send)
+                self.get_logger().info(f"[MQTT-Mirror] Created publisher for {topic_no_starting_with_number}") 
+        self.publishers_[topic_no_starting_with_number].publish(send)
 
     def on_connect(self, client, userdata, flags, rc):
         self.get_logger().info(f"[MQTT-Mirror] Connected to MQTT broker with result code {rc}")
