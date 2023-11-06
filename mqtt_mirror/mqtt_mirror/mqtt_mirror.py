@@ -9,6 +9,7 @@ from rclpy import qos
 from rclpy.qos import QoSProfile
 import paho.mqtt.client as mqtt
 import json 
+from rclpy.exceptions import InvalidTopicNameException
 
 class MqttMirror(Node):
 
@@ -66,7 +67,12 @@ class MqttMirror(Node):
                 _qos = QoSProfile(durability=qos.QoSDurabilityPolicy.VOLATILE,
                            reliability=qos.QoSReliabilityPolicy.BEST_EFFORT, history=qos.QoSHistoryPolicy.KEEP_LAST, depth=1)
 
-                self.publishers_[topic_no_whitespace_lowercase] = self.create_publisher(type(send), topic_no_whitespace_lowercase, 0)
+                try:
+                    self.publishers_[topic_no_whitespace_lowercase] = self.create_publisher(type(send), topic_no_whitespace_lowercase, 0)
+                except InvalidTopicNameException as err_name:
+                    self.get_logger().info(f"[MQTT-Mirror] {err_name}")
+                    return
+                
                 self.get_logger().info(f"[MQTT-Mirror] Created publisher for {topic_no_whitespace_lowercase}") 
         self.publishers_[topic_no_whitespace_lowercase].publish(send)
 
