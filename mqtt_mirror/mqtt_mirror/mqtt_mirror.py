@@ -32,13 +32,14 @@ class MqttMirror(Node):
         topic = msg.topic
         topic_no_whitespace_lowercase = topic.replace("-", "_").lower()
         topic_no_starting_with_number = None
-        if not topic_no_whitespace_lowercase[0].isdigit():
-            topic_no_starting_with_number = topic_no_whitespace_lowercase
-        else:
-            for i, char in enumerate(topic_no_whitespace_lowercase):
-                if not char.isdigit():
-                    topic_no_starting_with_number = topic_no_whitespace_lowercase[i:]
-                    break 
+        topics_split = topic_no_whitespace_lowercase.split('/')
+        for i, subtopic in enumerate(topics_split):
+            if subtopic[0].isdigit():
+                for i, char in enumerate(subtopic):
+                    if not char.isdigit():
+                        subtopic = subtopic[i:]
+                        break 
+            topic_no_starting_with_number += '/' + subtopic        
 
         first_subtopic = topic.split('/')[1]
         last_subtopic = topic.split('/')[-1]
