@@ -4,6 +4,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from conceptio_interfaces.msg import ArenaHeartbeat
 from conceptio_interfaces.msg import ArenaKinematics
+from conceptio_interfaces.msg import ArenaEntities
 
 from rclpy import qos
 from rclpy.qos import QoSProfile
@@ -28,8 +29,9 @@ class MqttMirror(Node):
         self.mqtt_client.subscribe("conceptio/unit/#", qos = 0)
         self.create_timer(1.0, self.fetch_new_topics)
         self.known_types = {
-            "ArenaHeartbeat": ArenaHeartbeat,
-            "ArenaKinematics": ArenaKinematics
+            "conceptio_interfaces/msg/ArenaHeartbeat": ArenaHeartbeat,
+            "conceptio_interfaces/msg/ArenaKinematics": ArenaKinematics,
+            "conceptio_interfaces/msg/ArenaEntities" : ArenaEntities
         }
 
         self.publishers_ = {}
