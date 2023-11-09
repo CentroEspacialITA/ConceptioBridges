@@ -10,6 +10,7 @@ from rclpy.qos import QoSProfile
 import paho.mqtt.client as mqtt
 import json 
 from rclpy.exceptions import InvalidTopicNameException
+from functools import partial
 
 class MqttMirror(Node):
 
@@ -25,8 +26,52 @@ class MqttMirror(Node):
         self.mqtt_client.connect(self.get_parameter('mqtt_host').get_parameter_value().string_value, 
            self.get_parameter('mqtt_port').get_parameter_value().integer_value)
         self.mqtt_client.subscribe("conceptio/unit/#", qos = 0)
+        self.create_timer(1.0, self.fetch_new_topics)
+        
+
         self.publishers_ = {}
         self.mqtt_client.loop_forever()
+
+    def fetch_new_topics(self):
+        for subscription in self.subscriptions:
+            subscription.destroy()
+
+        topic_names_and_types = self.get_topic_names_and_types()
+        for name, topic_type in topic_names_and_types:
+            self.get_logger().info(f"[MQTT-Mirror] Found new topic {name}")
+            self.create_subscription(topic_type, name, partial(self.republish_callback, topic_name = name ), 0)
+
+    def republish_callback(self, msg, topic_name):
+        # Republish ROS2 message in MQTT topic
+        last_subtopic = topic_name.split('/')[-1]
+        json_msg = None
+        if last_subtopic == "kinematics":
+            json_msg = json.dumps({
+            "uuid": msg.uuid,
+            "geo_point": {
+                "latitude": msg.geo_point.latitude,
+                "altitude": msg.geo_point.altitude,
+                "longitude": msg.geo_point.longitude
+            },
+            "yaw": msg.yaw,
+            "pitch": msg.pitch,
+            "roll": msg.roll
+        })
+        elif last_subtopic == "heartbeat":
+            json_msg = json.dumps({
+            "entity_type": msg.entity_type,
+            "entity_uuid": msg.entity_uuid,
+            "entity_name": msg.entity_name,
+            "heartbeat_rate": msg.heartbeat_rate,
+            "timestamp": msg.stamp,
+            "type": msg.type
+        })
+        else:
+            self.get_logger().info(f"[MQTT-Mirror] Received message in unknown topic {topic_name}")
+            return
+        
+
+        self.mqtt_client.publish(topic_name, json_msg, qos=0)
 
     def on_message(self, client, userdata, msg : mqtt.MQTTMessage):
         topic = msg.topic
@@ -45,8 +90,7 @@ class MqttMirror(Node):
         last_subtopic = topic.split('/')[-1]
         if last_subtopic != "kinematics":
             return
-        
-
+       
         message = json.loads(msg.payload.decode("utf-8"))
         send = None
 
@@ -62,6 +106,7 @@ class MqttMirror(Node):
         elif last_subtopic == "kinematics":
             #print("Received message in kinematics")
             send = ArenaKinematics()
+            send.uuid = message['uuid']
             send.geo_point.latitude = message['geo_point']['latitude']
             send.geo_point.altitude = message['geo_point']['altitude']
             send.geo_point.longitude = message['geo_point']['longitude']
