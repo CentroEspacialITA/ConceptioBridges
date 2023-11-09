@@ -27,7 +27,10 @@ class MqttMirror(Node):
            self.get_parameter('mqtt_port').get_parameter_value().integer_value)
         self.mqtt_client.subscribe("conceptio/unit/#", qos = 0)
         self.create_timer(1.0, self.fetch_new_topics)
-        
+        self.known_types = {
+            "ArenaHeartbeat": ArenaHeartbeat,
+            "ArenaKinematics": ArenaKinematics
+        }
 
         self.publishers_ = {}
         self.mqtt_client.loop_start()
@@ -39,7 +42,7 @@ class MqttMirror(Node):
         topic_names_and_types = self.get_topic_names_and_types()
         for name, topic_type in topic_names_and_types:
             self.get_logger().info(f"[MQTT-Mirror] Found new topic {name}")
-            self.create_subscription(topic_type[0], name, partial(self.republish_callback, topic_name = name ), 0)
+            self.create_subscription(self.known_types[topic_type[0]], name, partial(self.republish_callback, topic_name = name ), 0)
 
     def republish_callback(self, msg, topic_name):
         # Republish ROS2 message in MQTT topic
