@@ -43,6 +43,8 @@ class MqttMirror(Node):
 
         topic_names_and_types = self.get_topic_names_and_types()
         for name, topic_type in topic_names_and_types:
+            if topic_type[0] not in self.known_types:
+                continue
             self.get_logger().info(f"[MQTT-Mirror] Found new topic {name}")
             self.create_subscription(self.known_types[topic_type[0]], name, partial(self.republish_callback, topic_name = name ), 0)
 
