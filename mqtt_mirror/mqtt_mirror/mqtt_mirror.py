@@ -39,11 +39,16 @@ class MqttMirror(Node):
         topic_names_and_types = self.get_topic_names_and_types()
         for name, topic_type in topic_names_and_types:
             self.get_logger().info(f"[MQTT-Mirror] Found new topic {name}")
-            self.create_subscription(topic_type, name, partial(self.republish_callback, topic_name = name ), 0)
+            self.create_subscription(type(topic_type), name, partial(self.republish_callback, topic_name = name ), 0)
 
     def republish_callback(self, msg, topic_name):
         # Republish ROS2 message in MQTT topic
         last_subtopic = topic_name.split('/')[-1]
+        first_subtopic = topic_name.split('/')[1]
+        if first_subtopic == "mqtt_mirror":
+            return
+        topic_name_nointernal = topic_name.replace("mqtt_mirror/", "")
+
         json_msg = None
         if last_subtopic == "kinematics":
             json_msg = json.dumps({
@@ -67,14 +72,14 @@ class MqttMirror(Node):
             "type": msg.type
         })
         else:
-            self.get_logger().info(f"[MQTT-Mirror] Received message in unknown topic {topic_name}")
+            self.get_logger().info(f"[MQTT-Mirror] Received message in unknown topic {topic_name_nointernal}")
             return
         
 
-        self.mqtt_client.publish(topic_name, json_msg, qos=0)
+        self.mqtt_client.publish(topic_name_nointernal, json_msg, qos=0)
 
     def on_message(self, client, userdata, msg : mqtt.MQTTMessage):
-        topic = msg.topic
+        topic =  msg.topic
         topic_no_whitespace_lowercase = topic.replace("-", "_").lower()
         topic_no_starting_with_number = ""
         topics_split = topic_no_whitespace_lowercase.split('/')
