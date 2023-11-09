@@ -27,7 +27,7 @@ class MqttMirror(Node):
         self.mqtt_client.connect(self.get_parameter('mqtt_host').get_parameter_value().string_value, 
            self.get_parameter('mqtt_port').get_parameter_value().integer_value)
         self.mqtt_client.subscribe("conceptio/unit/#", qos = 0)
-        self.create_timer(1.0, self.fetch_new_topics)
+        self.create_timer(5.0, self.fetch_new_topics)
         self.known_types = {
             "conceptio_interfaces/msg/ArenaHeartbeat": ArenaHeartbeat,
             "conceptio_interfaces/msg/ArenaKinematics": ArenaKinematics,
@@ -39,7 +39,12 @@ class MqttMirror(Node):
 
     def fetch_new_topics(self):
         for subscription in self.subscriptions:
-            subscription.destroy()
+            # Check if topic name starts with conceptio
+            if subscription.topic_name.startswith("conceptio/") or \
+            subscription.topic_name.startswith("/conceptio/") or \
+            subscription.topic_name.startswith("mqtt_mirror/"):
+                self.destroy_subscription(subscription)
+
 
         topic_names_and_types = self.get_topic_names_and_types()
         for name, topic_type in topic_names_and_types:
