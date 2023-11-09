@@ -30,7 +30,7 @@ class MqttMirror(Node):
         self.mqtt_client.on_connect = self.on_connect
         self.mqtt_client.on_disconnect = self.on_disconnect
         self.mqtt_client.on_message = self.on_message
-        
+
         self.create_timer(5.0, self.fetch_new_topics)
         self.known_types = {
             "conceptio_interfaces/msg/ArenaHeartbeat": ArenaHeartbeat,
@@ -59,7 +59,7 @@ class MqttMirror(Node):
 
     def republish_callback(self, msg, topic_name):
         # Republish ROS2 message in MQTT topic
-        self.get_logger.info(f"Callback called for {topic_name}")
+        self.get_logger().info(f"Callback called for {topic_name}")
         last_subtopic = topic_name.split('/')[-1]
         first_subtopic = topic_name.split('/')[1]
         if first_subtopic == "mqtt_mirror":
