@@ -100,13 +100,16 @@ class MqttMirror(Node):
         topic_no_whitespace_lowercase = topic.replace("-", "_").lower()
         topic_no_starting_with_number = ""
         topics_split = topic_no_whitespace_lowercase.split('/')
-        for i, subtopic in enumerate(topics_split):
-            if subtopic[0].isdigit():
-                for i, char in enumerate(subtopic):
-                    if not char.isdigit():
-                        subtopic = subtopic[i:]
-                        break 
-            topic_no_starting_with_number += '/' + subtopic        
+        sanitized_subtopics = []
+        for subtopic in topics_split:
+            if subtopic and (subtopic[0].isdigit() or subtopic[0] == '_'):
+            # If the subtopic starts with a number or an underscore, add a prefix
+                sanitized_subtopics.append('internal_' + subtopic)
+            else:
+                sanitized_subtopics.append(subtopic)
+
+        # Join the sanitized subtopics back into a topic name
+        sanitized_topic_name = '/'.join(sanitized_subtopics)       
 
         first_subtopic = topic.split('/')[1]
         last_subtopic = topic.split('/')[-1]
@@ -139,19 +142,19 @@ class MqttMirror(Node):
             self.get_logger().info(f"[MQTT-Mirror] Received message in unknown topic {topic}")
             return
         
-        if topic_no_starting_with_number not in self.publishers_:
+        if sanitized_topic_name not in self.publishers_:
                 # https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html#
                 _qos = QoSProfile(durability=qos.QoSDurabilityPolicy.VOLATILE,
                            reliability=qos.QoSReliabilityPolicy.BEST_EFFORT, history=qos.QoSHistoryPolicy.KEEP_LAST, depth=1)
 
                 try:
-                    self.publishers_[topic_no_starting_with_number] = self.create_publisher(type(send), topic_no_starting_with_number, 0)
+                    self.publishers_[sanitized_topic_name] = self.create_publisher(type(send), sanitized_topic_name, 0)
                 except InvalidTopicNameException as err_name:
                     self.get_logger().info(f"[MQTT-Mirror] {err_name}")
                     return
                 
-                self.get_logger().info(f"[MQTT-Mirror] Created publisher for {topic_no_starting_with_number}") 
-        self.publishers_[topic_no_starting_with_number].publish(send)
+                self.get_logger().info(f"[MQTT-Mirror] Created publisher for {sanitized_topic_name}") 
+        self.publishers_[sanitized_topic_name].publish(send)
 
     def on_connect(self, client, userdata, flags, rc):
         self.get_logger().info(f"[MQTT-Mirror] Connected to MQTT broker with result code {rc}")
