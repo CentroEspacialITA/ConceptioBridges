@@ -30,7 +30,7 @@ class MqttMirror(Node):
         
 
         self.publishers_ = {}
-        self.mqtt_client.loop_forever()
+        self.mqtt_client.loop_start()
 
     def fetch_new_topics(self):
         for subscription in self.subscriptions:
@@ -144,6 +144,7 @@ def main(args=None):
 
 
     rclpy.spin(mqtt_mirror)
+    mqtt_mirror.mqtt_client.loop_stop()
     mqtt_mirror.destroy_node()
     rclpy.shutdown()
 
