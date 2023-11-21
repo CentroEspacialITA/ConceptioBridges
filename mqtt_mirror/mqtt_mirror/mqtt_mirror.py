@@ -42,26 +42,19 @@ class MqttMirror(Node):
         self.mqtt_client.loop_start()
 
     def fetch_new_topics(self):
-        for subscription in self.subscriptions:
-            # Check if topic name starts with conceptio
-            if subscription.topic_name.startswith("conceptio/") or \
-            subscription.topic_name.startswith("/conceptio/") or \
-            subscription.topic_name.startswith("mqtt_mirror/"):
-                self.destroy_subscription(subscription)
-
-
         topic_names_and_types = self.get_topic_names_and_types()
         for name, topic_type in topic_names_and_types:
             if topic_type[0] not in self.known_types:
                 continue
-            self.get_logger().info(f"[MQTT-Mirror] Found new topic {name}")
+            self.get_logger().info(f"[MQTT-Mirror] Found new mirror-able topic {name}")
             self.create_subscription(self.known_types[topic_type[0]], name, partial(self.republish_callback, topic_name = name ), 0)
 
     def republish_callback(self, msg, topic_name):
         # Republish ROS2 message in MQTT topic
-        self.get_logger().info(f"Callback called for {topic_name}")
         last_subtopic = topic_name.split('/')[-1]
         first_subtopic = topic_name.split('/')[1]
+
+        # Do not republish messages to MQTT that were created by the own node
         if first_subtopic == "mqtt_mirror":
             return
         topic_name_nointernal = topic_name.replace("mqtt_mirror/", "")
@@ -113,14 +106,19 @@ class MqttMirror(Node):
 
         first_subtopic = topic.split('/')[1]
         last_subtopic = topic.split('/')[-1]
-        if last_subtopic != "kinematics":
-            return
-       
-        message = json.loads(msg.payload.decode("utf-8"))
-        send = None
 
+        try:
+            decoded_utf8_ = msg.payload.decode("utf-8")
+        except UnicodeDecodeError as err:
+            self.get_logger().info(f"[MQTT-Mirror] Could not decode payload from MQTT broker: {err} ({msg.topic})")
+            return
+        try:
+            message = json.loads(decoded_utf8_)
+        except json.JSONDecodeError as err:
+            self.get_logger().info(f"[MQTT-Mirror] Could not decode JSON from MQTT broker: {err} ({msg.topic})")
+            return
+        
         if last_subtopic == "heartbeat":
-            #print("Received message in heartbeat")
             send = ArenaHeartbeat()
             send.entity_type = message['entity_type']
             send.entity_uuid = message['entity_uuid']
@@ -129,7 +127,7 @@ class MqttMirror(Node):
             send.stamp = message['timestamp']
             send.type = message['type']
         elif last_subtopic == "kinematics":
-            #print("Received message in kinematics")
+            print("Received message in kinematics")
             send = ArenaKinematics()
             send.uuid = message['uuid']
             send.geo_point.latitude = message['geo_point']['latitude']
@@ -148,7 +146,7 @@ class MqttMirror(Node):
                            reliability=qos.QoSReliabilityPolicy.BEST_EFFORT, history=qos.QoSHistoryPolicy.KEEP_LAST, depth=1)
 
                 try:
-                    self.publishers_[sanitized_topic_name] = self.create_publisher(type(send), sanitized_topic_name, 0)
+                    self.publishers_[sanitized_topic_name] = self.create_publisher(type(send), "mqtt_mirror/" + sanitized_topic_name, 0)
                 except InvalidTopicNameException as err_name:
                     self.get_logger().info(f"[MQTT-Mirror] {err_name}")
                     return
