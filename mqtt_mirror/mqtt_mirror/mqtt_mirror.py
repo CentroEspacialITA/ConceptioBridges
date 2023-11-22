@@ -2,6 +2,7 @@ import rclpy
 
 from rclpy.node import Node
 from std_msgs.msg import String
+from std_msgs.msg import UInt64
 from conceptio_interfaces.msg import ArenaHeartbeat
 from conceptio_interfaces.msg import ArenaKinematics
 from conceptio_interfaces.msg import ArenaEntities
@@ -27,6 +28,7 @@ class MqttMirror(Node):
         self.mqtt_client.connect(self.get_parameter('mqtt_host').get_parameter_value().string_value, 
            self.get_parameter('mqtt_port').get_parameter_value().integer_value)
         self.mqtt_client.subscribe("conceptio/unit/#", qos = 0)
+        self.mqtt_client.subscribe("conceptio/ping", qos = 0)
         self.mqtt_client.on_connect = self.on_connect
         self.mqtt_client.on_disconnect = self.on_disconnect
         self.mqtt_client.on_message = self.on_message
@@ -136,6 +138,10 @@ class MqttMirror(Node):
             send.yaw = message['yaw']
             send.pitch = message['pitch']
             send.roll = message['roll']
+        elif last_subtopic == "ping":
+            epoch_in_nanoseconds = self.get_clock().now().nanoseconds
+            time_diff_in_ms = (epoch_in_nanoseconds - message['timestamp']) / 1000000.0
+            self.get_logger().info(f"[MQTT-Mirror] Received ping from MQTT broker: {time_diff_in_ms} ms")
         else:
             self.get_logger().info(f"[MQTT-Mirror] Received message in unknown topic {topic}")
             return
