@@ -64,7 +64,6 @@ class MqttMirror(Node):
         json_msg = None
         if last_subtopic == "kinematics":
             json_msg = json.dumps({
-            "uuid": msg.uuid,
             "geo_point": {
                 "latitude": msg.geo_point.latitude,
                 "altitude": msg.geo_point.altitude,
