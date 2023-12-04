@@ -33,7 +33,7 @@ class MqttMirror(Node):
         self.mqtt_client.on_disconnect = self.on_disconnect
         self.mqtt_client.on_message = self.on_message
 
-        self.create_timer(5.0, self.fetch_new_topics)
+        self.create_timer(10.0, self.fetch_new_topics)
         self.known_types = {
             "conceptio_interfaces/msg/ArenaHeartbeat": ArenaHeartbeat,
             "conceptio_interfaces/msg/ArenaKinematics": ArenaKinematics,
@@ -48,7 +48,6 @@ class MqttMirror(Node):
         for name, topic_type in topic_names_and_types:
             if topic_type[0] not in self.known_types:
                 continue
-            self.get_logger().info(f"[MQTT-Mirror] Found new mirror-able topic {name}")
             self.create_subscription(self.known_types[topic_type[0]], name, partial(self.republish_callback, topic_name = name ), 0)
 
     def republish_callback(self, msg, topic_name):
@@ -124,13 +123,12 @@ class MqttMirror(Node):
             send.entity_type = message['entity_type']
             send.entity_uuid = message['entity_uuid']
             send.entity_name = message['entity_name']
-            send.heartbeat_rate = message['heartbeat_rate']
-            send.stamp = message['timestamp']
+            send.heartbeat_rate = float(message['heartbeat_rate'])
+            send.stamp = float(message['timestamp'])
             send.type = message['type']
         elif last_subtopic == "kinematics":
             print("Received message in kinematics")
             send = ArenaKinematics()
-            send.uuid = message['uuid']
             send.geo_point.latitude = message['geo_point']['latitude']
             send.geo_point.altitude = message['geo_point']['altitude']
             send.geo_point.longitude = message['geo_point']['longitude']
